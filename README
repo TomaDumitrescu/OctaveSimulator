@@ -1,0 +1,120 @@
+# Copyright 2023 <Toma-Ioan Dumitrescu>
+
+### Octave simulator:
+
+_Description:_
+
+	The program resembles a simple GNU Octave matrix calculator performing
+basic mathematical operations: writing and retaining matrices, obtaining
+a new matrix from given lines and columns intersections from an already
+stored matrix, multiply two matrix using O(n^2) algorithm, sort the sequence
+of matrices based on the sum of their elements, replace a matrix with its
+transpose, raising a matrix to pth power in _logarithmic complexity_,
+eliminating a matrix from the sequence. The application offers a basic
+user-interface design, using a do-while menu where commands are codified
+with characters. Techniques: dynamical allocation, defensive programming,
+recursivity and memory management using valgrind.
+
+_Installing guide:_
+
+Step 1: Unzip the archive in the terminal and change to program directory
+Step 2: Run "make" command
+Step 3: Run "./my_octave" command
+
+_Operations glossary:_
+
+	L [rows] [columns]		= loads a matrix rows x columns
+	D [index]				= prints the [index] matrix dimensions
+	P [index]				= prints the [index] matrix elements
+	C [index]				= resize based on rows and cols intersections
+		[no_rows]
+		[r1] [r2] ... [r(no_rows)]
+		[no_columns]
+		[c1] [c2] ... [c(no_columns)]
+	M [index1] [index2]		= multiplies matrices index1, index 2 if 
+							= possible
+	O						= sorts the matrices on the above-mentioned
+							= criterium
+	T [index]				= replaces [index] matrix with its transpose
+	R [index] [power]		= replaces [index] matrix with its [power]
+							= power matrix
+	F [index]				= deletes a matrix from the sequence
+	Q						= exits the program and clears all structures
+							= allocated on heap (in the program)
+
+_Implementation references:_
+
+	Because the program is not very complex, it's sufficient to organize
+the code in no more than 3 files.
+
+	utils.h:
+
+	All necesary libraries included here
+	DIE macro: represents a defensive programming tool for shorter code
+			   (taken from data structures laboratories)
+	START_SIZE: initial length of the array of matrices (it can be adjusted)
+	LOWER_BOUND: minimum number of frees so that it's reasonable to 
+				 reallocate arrays
+
+	menu.c:
+
+	Here we have the UI and initial allocations of arrays.
+	v is an array of pointers to different matrices locations, not
+	a 3D structure
+	index = the index of the next matrix that can be loaded
+	m, n = arrays to retain matrices dimensions
+
+	functions.c:
+
+	change_env: realloc v, m and n. It works only if we pass &v, &m, &n as
+				parameters (observed experimentally)
+	resize: evidently, the resized matrix will have [no_rows]x[no_columns]
+			dimensions. The idea is to apply the function over the
+			new_matrix: (i, j) -> matrix(l_arr(i), l_arr(j)).
+	memory management trick: double pointer to the old matrix (p) and
+							 assign the new matrix address to
+							 v[search_index], then free the old matrix
+							 using pointer p that helps memorizing the
+							 specific location.
+	sort_matrices: create the sum vector where sum(i) = S(mat(i)), then sort
+				   the matrices with sum array criterium.
+
+	transpose: allocate a new matrix (n, m), then aT_ij = a_ji,
+			   same memory trick consisting in pointers swap
+
+	mat_dot_pow: function for matrix multiply algorithm where
+				 A(mn) * B(np) = C(mp), where m, n, p are dimensions.
+
+	power_matrix: actually doing the recursion:
+				  A^n = A * (A^2) ^ ((n - 1) / 2), when n is odd
+				  A^n = (A^2)^(n/2), when n is even
+				  The idea is that we can create a recursion based on two
+				  cases of n. In solution we retain actually the A from n
+				  = odd cases, resulting A^k, where k is the number of times
+				  n gets odd when dividing it by 2, and in v[index] we have
+				  A^(2p), resulting A^(2k + p) = A^n, obtained in
+				  O(log2(p)*(n^2)). In original we retain A, because we need
+				  that matrix at every step when n is odd. Copy_mat prevents
+				  altering the data while calculating the matrices products.
+				  The algorithm stops when p <= 1, because those cases are
+				  treated separately in the main power_matrix function.
+
+	log2_power_main: segregates the calculation of power matrix in cases
+					 based on index or p. It centralises power_matrix,
+					 mat_dot_pow and copy_matrix.
+
+_Bugs that consumed time_
+
+	Not passing the addresses at change_env function when reallocating arrays
+	Doing while (x < 0) x+= 10007, x %= OVERFLOW, instead of
+	x %= 10007, if (x < 0) x += 10007
+	Not copying in buffer the matrices in mat_dot_pow and using a structure
+	like: mat_dot_pow (A, B, A)
+	Accidentaly writing a matrix in a test file input.
+
+_Bibliography_
+
+	Fast exp: https://en.wikipedia.org/wiki/Exponentiation_by_squaring
+	DIE macro: https://ocw.cs.pub.ro/courses/so/laboratoare/resurse/die
+	Theory: https://ocw.cs.pub.ro/courses/programare
+
