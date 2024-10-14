@@ -76,6 +76,7 @@ the code in no more than 3 files.
 							 v[search_index], then free the old matrix
 							 using pointer p that helps memorizing the
 							 specific location.
+
 	sort_matrices: create the sum vector where sum(i) = S(mat(i)), then sort
 				   the matrices with sum array criterium.
 
